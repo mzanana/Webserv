@@ -3,6 +3,7 @@
 #include "Error.hpp"
 
 bool loop_is_true = true;
+int server_index = 0;
 
 
 std::vector<Server_block> Conf_File::Servers;
@@ -50,6 +51,8 @@ void open_file(std::string filename)
                          std::istreambuf_iterator<char>());
     file.close();
     size_t i = 0;
+    // std::cout << content << "\n";
+    // exit(1);
 
     while (i < content.size())
     {
@@ -104,15 +107,21 @@ int main(int ac , char **av)
             throw Error::Socket();
         open_file(av[1]);
         parse_config_file();
-        exit(1);
+        std::cout << Conf_File::tokens.size() << std::endl;
+        // size_t i = 0;
+        // while (i < Conf_File::tokens.size())
+        // {
+        //     std::cout << Conf_File::tokens[i] << "\n";
+        //     i++;
+        // }
+        // exit(1);
         // Conf_File::reset_flags();
         // parse_file();
-        size_t i = 0;
-        while (i < Conf_File::tokens.size())
-        {
-            std::cout << Conf_File::tokens[i] << "\n";
-            i++;
-        }
+        // while (i < Conf_File::tokens.size())
+        // {
+        //     std::cout << Conf_File::tokens[i] << "\n";
+        //     i++;
+        // }
         // while (i < Conf_File::rawLines.size())
         // {
         //     std::cout << Conf_File::rawLines[i] << std::endl;

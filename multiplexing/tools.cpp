@@ -31,3 +31,43 @@ bool path_file_exists(std::string& name)
     struct stat buffer;
     return (stat(name.c_str(), &buffer) == 0);
 }
+
+std::string next_token(std::vector<std::string>& tokens , size_t &i)
+{
+    if (i >= tokens.size())
+        throw Error::UnexpectedEndOfFile();
+    return tokens[++i];
+}
+
+void expected_token(std::vector<std::string>& tokens, size_t &i, std::string& expected)
+{
+    std::string token = next_token(tokens, i);
+    if (token != expected)
+        throw Error::SyntaxError();
+}
+
+bool isKnownDirective(const std::string& token)
+{
+    return (token == "listen" || token == "host" || token == "server_name" ||
+            token == "root" || token == "index" || token == "client_max_body_size" ||
+            token == "error_page" || token == "allowed_methods" || token == "autoindex" ||
+            token == "return" || token == "cgi_extension" || token == "cgi_path" ||
+            token == "upload_store");
+}
+
+bool max_uploads_is_unit(size_t size, size_t index)
+{
+    return (Conf_File::tokens[index + 1][size - 1] == 'M' 
+            || Conf_File::tokens[index + 1][size - 1] == 'K' 
+            || Conf_File::tokens[index + 1][size - 1] == 'G');
+}
+
+bool is_http_method(std::string& method)
+{
+    return (method == "GET" || method == "POST" || method == "DELETE");
+}
+
+bool is_autoindex_id(std::string& id)
+{
+    return (id == "on" || id == "off");
+}

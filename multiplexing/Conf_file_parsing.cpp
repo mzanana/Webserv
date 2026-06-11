@@ -1,32 +1,345 @@
 #include "header.hpp"
 #include "Error.hpp"
 
-bool isKnownDirective(const std::string& token)
+extern int server_index;
+
+
+
+// void parse_cgi_path(size_t &index)
+// {
+//     // size_t i = 0;
+//     if (index + 2 >= Conf_File::tokens.size())
+//         throw Error::Root();
+//     if (Conf_File::tokens[index + 2] != ";")
+//         throw Error::Root();
+// }
+
+void parse_return(size_t &index)
 {
-    return (token == "listen" || token == "host" || token == "server_name" ||
-            token == "root" || token == "index" || token == "client_max_body_size" ||
-            token == "error_page" || token == "allowed_methods" || token == "autoindex" ||
-            token == "return" || token == "cgi_extension" || token == "cgi_path" ||
-            token == "upload_store");
+    // size_t i = 0;
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Root();
+    if (Conf_File::tokens[index + 2] != ";")
+        throw Error::Root();
+    
 }
 
-// void minimal_directives_exists(std::string& token)
-// {
-//     if (token == "location")
-//         Conf_File::
-// }
+void parse_root(size_t &index)
+{
+    // size_t i = 0;
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Root();
+    if (Conf_File::tokens[index + 2] != ";")
+        throw Error::Root();
+    Conf_File::Servers[server_index].root = next_token(Conf_File::tokens, index);
+    if (!path_file_exists(Conf_File::Servers[server_index].root))
+        throw Error::Root();
+    index += 2;
+}
+
+void parse_host(size_t &index)
+{
+    size_t i = 0;
+    size_t dot_count = 0;
+
+    if (index + 1 >= Conf_File::tokens.size() || index + 2 >= Conf_File::tokens.size())
+        throw Error::Host_ip();
+    if (Conf_File::tokens[index + 2] != ";")
+        throw Error::Host_ip();
+    if (Conf_File::tokens[index + 1].size() < 7)
+        throw Error::Host_ip();
+    for (int octet = 0; octet < 4; octet++)
+    {
+        if (i == Conf_File::tokens[index + 1].size() || !isdigit(Conf_File::tokens[index + 1][i]))
+            throw Error::Host_ip();
+
+        if (Conf_File::tokens[index + 1][i] == '0' && i + 1 < Conf_File::tokens[index + 1].size() && isdigit(Conf_File::tokens[index + 1][i + 1]))
+            throw Error::Host_ip();
+        char octet_buf[4];
+        size_t j = 0;
+        while (i < Conf_File::tokens[index + 1].size() && isdigit(Conf_File::tokens[index + 1][i]))
+        {
+            if (j == 3)
+                throw Error::Host_ip();
+            octet_buf[j++] = Conf_File::tokens[index + 1][i++];
+        }
+        octet_buf[j] = '\0';
+        long val = strtol(octet_buf, NULL, 10);
+        if (val < 0 || val > 255)
+            throw Error::Host_ip();
+        if (octet < 3)
+        {
+            if (i == Conf_File::tokens[index + 1].size() || Conf_File::tokens[index + 1][i] != '.')
+                throw Error::Host_ip();
+            i++;
+            dot_count++;
+        }
+    }
+    if (dot_count != 3)
+        throw Error::Host_ip();
+    index += 3;
+    // Conf_File::Servers[server_index].host = line.substr(start, end - start);
+}
+
+void parse_index(size_t &index)
+{
+    size_t i = 0;
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Index();
+    while (i < Conf_File::tokens.size() && !isKnownDirective(Conf_File::tokens[index]) && Conf_File::tokens[index] != ";")
+    {
+        Conf_File::Servers[server_index].index_files[i] = Conf_File::tokens[index];
+        i++;
+        index++;
+    }
+    if (index >= Conf_File::tokens.size())
+        throw Error::UnexpectedEndOfFile();
+    index += 3;
+}
+
+void parse_location_index(size_t &index)
+{
+    size_t i = 0;
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Index();
+    while (i < Conf_File::tokens.size() && !isKnownDirective(Conf_File::tokens[index]) && Conf_File::tokens[index] != ";")
+    {
+        Conf_File::Servers[server_index].location.index_files[i] = Conf_File::tokens[index];
+        i++;
+        index++;
+    }
+    if (index >= Conf_File::tokens.size())
+        throw Error::UnexpectedEndOfFile();
+    index += 3;
+}
+
+void parse_server_name(size_t &index)
+{
+    if (index + 1 >= Conf_File::tokens.size() || index + 2 >= Conf_File::tokens.size())
+        throw Error::Server_name();
+    if (Conf_File::tokens[index + 2] != ";")
+        throw Error::Server_name();
+    if (Conf_File::tokens[index + 2] == ";")
+        Conf_File::Servers[server_index].server_name = next_token(Conf_File::tokens, index);
+    index += 2;
+}
+
+void parse_location(size_t &index)
+{
+    while (index < Conf_File::tokens.size() && Conf_File::tokens[index] != "{")
+        index++;
+    index++;
+    while (Conf_File::tokens[index] != "}")
+    {
+
+    }
+}
+
+void parse_max_body_size(size_t &index)
+{
+    // size_t i = 0;
+    size_t size = Conf_File::tokens[index + 1].size() - 1;
+    if (index + 1 >= Conf_File::tokens.size() || index + 2 >= Conf_File::tokens.size())
+        throw Error::MaxUploads();
+    if (Conf_File::tokens[index + 2] != ";")
+        throw Error::MaxUploads();
+    if (Conf_File::tokens[index + 2] == ";")
+    {
+        Conf_File::Servers[server_index].max_body_size = strtol(next_token(Conf_File::tokens, index).substr(0, size - 1).c_str(), NULL, 10);
+        if (max_uploads_is_unit(size, index))
+        {
+            if (Conf_File::tokens[index + 1][size - 1] == 'M')
+                Conf_File::Servers[server_index].body_size_is_MB = true;
+            if (Conf_File::tokens[index + 1][size - 1] == 'G')
+                Conf_File::Servers[server_index].body_size_is_GB = true;
+            if (Conf_File::tokens[index + 1][size - 1] == 'K')
+                Conf_File::Servers[server_index].body_size_is_KB = true;
+        }
+    }
+    index += 2;
+}
+
+void parse_listen(size_t &index)
+{
+    // size_t i = 0;
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Listen_port();
+    if (Conf_File::tokens[index + 2] != ";")
+        throw Error::Listen_port();
+    char* endptr;
+    long port = strtol(next_token(Conf_File::tokens, index).c_str(), &endptr, 10);
+    // std::cout << index << std::endl;
+    // exit(1);
+    index += 2;
+    // std::cout << index << std::endl;
+    // exit(1);   
+    if (*endptr != '\0')
+        throw Error::Listen_port();
+    if (port < 1 || port > 65535)
+        throw Error::Listen_port();
+    // std::cout << port << std::endl;
+    
+    Conf_File::Servers[server_index].listen_port = port;
+}
+void parse_error_pages(size_t &index)
+{
+    size_t i = 0;
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Error_page();
+    while (i < Conf_File::tokens.size() && !isdigit(Conf_File::tokens[index][0]))
+    {
+        Conf_File::Servers[server_index].error_pages[i] = next_token(Conf_File::tokens, index);
+        i++;
+    }
+    if (index >= Conf_File::tokens.size())
+        throw Error::UnexpectedEndOfFile();   
+}
+
+void parse_directives(std::string& token, size_t &i)
+{
+    if (token == "host")
+        parse_host(i);
+    else if (token == "index")
+        parse_index(i);
+    else if (token == "root")
+        parse_root(i);
+    else if (token == "client_max_body_size")
+        parse_max_body_size(i);
+    else if (token == "server_name")
+        parse_server_name(i);
+    else if (token == "listen")
+        parse_listen(i);
+    else if (token == "error_page")
+        parse_error_pages(i);
+    // else if (token == "cgi_path")
+    //     parse_cgi_path(i);
+    else if (token == "return")
+        parse_return(i);
+    // else if (token == "location")
+    // {
+    //     i++;
+    //     return ;
+    // }
+}
+
+void parse_root_path(size_t &index)
+{
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Root();
+    if (Conf_File::tokens[index + 2] !=  ";")
+        throw Error::SemiColon();
+    if (path_file_exists(Conf_File::tokens[index + 1]))
+        throw std::runtime_error(Conf_File::tokens[index + 1] + " : No such File or Directory!.");
+    Conf_File::Servers[server_index].location.root = next_token(Conf_File::tokens, index);
+    index += 2;
+}
+
+void parse_autoindex(size_t &index)
+{
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Root();
+    if (Conf_File::tokens[index + 2] !=  ";")
+        throw Error::SemiColon();
+    if (!is_autoindex_id(Conf_File::tokens[index + 1]))
+        throw Error::Unkonwn_Directive_value();
+    Conf_File::Servers[server_index].location.autoindex = next_token(Conf_File::tokens, index);
+    index += 2;
+}
+
+
+void parse_upload_store(size_t &index)
+{
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Root();
+    if (Conf_File::tokens[index + 2] !=  ";")
+        throw Error::SemiColon();
+    if (path_file_exists(Conf_File::tokens[index + 1]))
+    {
+        if (mkdir(Conf_File::tokens[index + 1].c_str(), 777) != 0)
+            throw std::runtime_error("Could not create the path : " + Conf_File::tokens[index + 1]);
+    }
+    Conf_File::Servers[server_index].location.upload_path = next_token(Conf_File::tokens, index);
+    index += 2;
+}
+
+void parse_methods(size_t &index)
+{
+    size_t i = 0;
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::Methods();
+    index++;
+    while (i < Conf_File::tokens.size() && Conf_File::tokens[index] != ";")
+    {
+        if (!is_http_method(Conf_File::tokens[index]))
+            throw Error::Unkonwn_Directive_value();
+        Conf_File::Servers[server_index].location.allowed_methods.push_back(next_token(Conf_File::tokens, index));
+        i++;
+    }
+    if (index >= Conf_File::tokens.size())
+        throw Error::UnexpectedEndOfFile();
+    index += 2;
+}
+
+void parse_cgi_extension(size_t &index)
+{
+    if (index + 2 >= Conf_File::tokens.size() || Conf_File::tokens[index + 1][0] != '.')
+        throw Error::CGI_Extension();
+    if (Conf_File::tokens[index + 2] !=  ";")
+        throw Error::SemiColon();
+    Conf_File::Servers[server_index].location.cgi_extension = next_token(Conf_File::tokens, index);
+    index += 2;
+}
+
+void parse_cgi_path(size_t &index)
+{
+    if (index + 2 >= Conf_File::tokens.size())
+        throw Error::CGI_Extension();
+    if (Conf_File::tokens[index + 2] !=  ";")
+        throw Error::SemiColon();
+    if (!path_file_exists(Conf_File::tokens[index + 1]))
+        throw Error::CGI_Path();
+    Conf_File::Servers[server_index].location.cgi_path = next_token(Conf_File::tokens, index);
+    index += 2;
+}
+
+
+void parse_location_directives(std::string& token, size_t &i)
+{
+    if (token == "root")
+        parse_root_path(i);
+    else if (token == "index")
+        parse_location_index(i);
+    else if (token == "autoindex")
+        parse_autoindex(i);
+    else if (token == "error_page")
+        parse_error_pages(i);
+    else if (token == "return")
+        parse_return(i);
+    else if (token == "allowed_methods")
+        parse_methods(i);
+    else if (token == "cgi_extension")
+        parse_cgi_extension(i);
+    else if (token == "upload_store")
+        parse_upload_store(i);
+    else 
+        throw Error::Unknown_Directive();
+}
+
 
 void parse_config_file()
 {
     size_t i = 0;
     // size_t server_index = 0;
     bool in_server = false;
-    size_t depth = 0;
+    int depth = 0;
     while (i < Conf_File::tokens.size())
     {
         std::string token = Conf_File::tokens[i];
         if (token == "server")
         {
+            Server_block new_server;
+            Conf_File::Servers.push_back(new_server);
+            server_index = (Conf_File::Servers.size() -1);
             // std::cout << "reached 2 \n";
             if (depth > 0)
                 throw std::runtime_error("Error\n'server' block cannot be nested inside another block!.");
@@ -34,7 +347,7 @@ void parse_config_file()
                 throw std::runtime_error("Error\nExpected '{' right after 'server'");
             in_server = true;
             depth++;
-            i++;
+            i += 2;
         }
         else if (token == "location")
         {
@@ -42,8 +355,16 @@ void parse_config_file()
                 throw std::runtime_error("Error\n'location' directive cannot be nested outside 'server'!.");
             if (i + 2 >= Conf_File::tokens.size() || Conf_File::tokens[i + 2] != "{")
                 throw std::runtime_error("Error\nExpected '{' after 'location <path>'!.");
-            depth++;
+            Conf_File::Servers[server_index].location.path = next_token(Conf_File::tokens, i);
             i += 2;
+            // std::cout << "here's the location path : " << Conf_File::tokens[i] << std::endl;
+            while (i < Conf_File::tokens.size() && Conf_File::tokens[i] != "}")
+            {
+                std::cout << Conf_File::tokens[i] << std::endl;
+                parse_location_directives(Conf_File::tokens[i], i);
+            }
+            depth++;
+            i++;  
         }
         else if (token == "{")
             throw std::runtime_error("Error\nUnexpected '{'. only 'server' or 'location' can open a block!.");
@@ -54,6 +375,7 @@ void parse_config_file()
                 throw std::runtime_error("Error\nUnbalanced '}'. too many closing braces!.");
             if (depth == 0)
                 in_server = false;
+            i++;
         }
         else if (token != ";")
         {
@@ -61,217 +383,17 @@ void parse_config_file()
             {
                 if (!in_server)
                     throw std::runtime_error("Error\nDirective '" + token + "' found outside 'server' block!.");
-
             }
         }
+        std::cout << token << std::endl;
+        std::cout << i << std::endl;
+        sleep (1);
+        parse_directives(token, i);
+        // std::cout << i << std::endl;
     }
     if (depth != 0)
         throw std::runtime_error("Error\nUnclosed block at the end of the file!.");
 }
-
-// void parse_root_dir(std::string& line, size_t server_index)
-// {
-//     size_t i = 0;
-//     size_t end = (line.size() - 1);
-//     while (end > 0 && isspace(line[end]))
-//             end--;
-//     if (line[end] != ';')
-//         throw Error::Root();
-//     skip_white_spaces(line, i);
-//     skip_directive(line, i);
-//     if (i == line.size() || !isspace(line[i]))
-//         throw Error::Root();
-//     skip_white_spaces(line, i);
-//     if (line[i] != '/')
-//         throw Error::Root();
-//     size_t start = i;
-//     end;
-//     while(i < line.size() && !isspace(line[i] && line[i] != ';'))
-//         i++;
-//     end = i;
-//     if (end == start)
-//         throw Error::Root();
-//     Conf_File::Servers[server_index].root = line.substr(start, end - start);
-//     if (!path_file_exists(Conf_File::Servers[server_index].root))
-//         throw Error::Root();
-// }
-
-// void Parse_host(std::string& line, size_t server_index)
-// {
-//     size_t i = 0;
-//     size_t dot_count = 0;
-//     size_t end = (line.size() - 1);
-//     while (end > 0 && isspace(line[end]))
-//             end--;
-//     if (line[end] != ';')
-//         throw Error::Host_ip();
-//     skip_white_spaces(line, i);
-//     skip_directive(line, i);
-//     if (i == line.size() || !isspace(line[i]))
-//         throw Error::Missing_directive_value();
-//     skip_white_spaces(line, i);
-//     if (i == line.size() || !isdigit(line[i]))
-//         throw Error::Non_Nemeric_value();
-//     for (int octet = 0; octet < 4; octet++)
-//     {
-//         if (i == line.size() || !isdigit(line[i]))
-//             throw Error::Host_ip();
-
-//         if (line[i] == '0' && i + 1 < line.size() && isdigit(line[i + 1]))
-//             throw Error::Host_ip();
-
-//         char octet_buf[4];
-//         size_t j = 0;
-//         while (i < line.size() && isdigit(line[i]))
-//         {
-//             if (j == 3)
-//                 throw Error::Host_ip();
-//             octet_buf[j++] = line[i++];
-//         }
-//         octet_buf[j] = '\0';
-//         long val = strtol(octet_buf, NULL, 10);
-//         if (val < 0 || val > 255)
-//             throw Error::Host_ip();
-//         if (octet < 3)
-//         {
-//             if (i == line.size() || line[i] != '.')
-//                 throw Error::Host_ip();
-//             i++;
-//             dot_count++;
-//         }
-//     }
-//     skip_white_spaces(line, i);
-//     if (i == line.size() || line[i] != ';')
-//         throw Error::SyntaxError();
-//     std::string ip(line.begin(), line.begin() + i);
-//     size_t start = 0;
-//     skip_white_spaces(line, start);
-//     while (start < line.size() && !isspace(line[start]))
-//         start++;
-//     skip_white_spaces(line, start);
-//     end = start;
-//     while (end < line.size() && !isspace(line[end]) && line[end] != ';')
-//         end++;
-//     Conf_File::Servers[server_index].host = line.substr(start, end - start);
-// }
-
-// void parse_index(std::string& line, size_t server_index)
-// {
-//     size_t i = 0;
-//     size_t j = 0;
-//     size_t end = (line.size() - 1);
-//     while (end > 0 && isspace(line[end]))
-//             end--;
-//     if (line[end] != ';')
-//         throw Error::Host_ip();
-//     skip_white_spaces(line, i);
-//     skip_directive(line, i);
-//     if (i == line.size() || !isspace(line[i]))
-//         throw Error::Index();
-//     skip_white_spaces(line, i);
-//     if (i == line.size())
-//         throw Error::Index();
-//     size_t start = i;
-//     while (i < line.size() && !isspace(line[i]))
-//     {
-//         i++;
-//     }
-//     end = i;
-//     if (start == end)
-//         throw Error::Index();
-//     size_t tmp = Conf_File::Servers[server_index].index_count++;
-//     Conf_File::Servers[server_index].index_files[tmp] = line.substr(start, end - start);
-// }
-
-// void parse_server_name(std::string& line, size_t server_index)
-// {
-//     size_t i = 0;
-//     size_t j = 0;
-//     size_t end = (line.size() - 1);
-//     while (end > 0 && isspace(line[end]))
-//             end--;
-//     if (line[end] != ';')
-//         throw Error::Server_name();
-//     skip_white_spaces(line, i);
-//     skip_directive(line, i);
-//     if (i == line.size() || !isspace(line[i]))
-//         throw Error::Server_name();
-//     skip_white_spaces(line, i);
-//     size_t start = i;
-//     while (i < line.size() && !isspace(line[i]))
-//     {
-        
-//     }
-// }
-
-// void parse_max_uploads(std::string& line, size_t server_index)
-// {
-//     char buffer[10];
-//     size_t i = 0;
-//     size_t j = 0;
-
-//     size_t end = (line.size() - 1);
-//     while (end > 0 && isspace(line[end]))
-//             end--;
-//     if (line[end] != ';')
-//         throw Error::MaxUploads();
-//     skip_white_spaces(line, i);
-//     skip_directive(line, i);
-//     if (i == line.size() || !isspace(line[i]))
-//         throw Error::Missing_directive_value();
-//     skip_white_spaces(line, i);
-//     if (!isdigit(line[i]))
-//         throw Error::Non_Nemeric_value();
-//     while (isdigit(line[i]))
-//     {
-//         buffer[j] = line[i];
-//         j++;
-//         i++;
-//         if(j == 9)
-//             throw Error::MaxUploads();
-//     }
-//     buffer[j] = '\0';
-//     if (line[i] == 'm' || line[i] == 'M')
-//         Conf_File::Servers[server_index].body_size_is_MB = true;
-//     else if (line[i] == 'G' || line[i] == 'g')
-//         Conf_File::Servers[server_index].body_size_is_GB = true;
-//     else if (line[i] == 'k' || line[i] == 'K')
-//         Conf_File::Servers[server_index].body_size_is_KB = true;
-//     else if (i == line.size() || line[i] == ' ' || line[i] == '\t')
-//         Conf_File::Servers[server_index].body_size_is_BT = true;
-//     else
-//         throw Error::Non_Nemeric_value();
-//     Conf_File::Servers[server_index].max_body_size = strtol(buffer, NULL, 10);
-// }
-
-// void parse_listen_port(std::string& line, size_t server_index)
-// {
-//     char buffer[10];
-//     size_t i = 0;
-//     size_t j = 0;
-//     size_t end = (line.size() - 1);
-//     while (end > 0 && isspace(line[end]))
-//             end--;
-//     if (line[end] != ';')
-//         throw Error::Listen();
-//     skip_white_spaces(line, i);
-//     skip_directive(line, i);
-//     if (i == line.size() || !isspace(line[i]))
-//         throw Error::Missing_directive_value();
-//     skip_white_spaces(line, i);
-//     if (!isdigit(line[i]))
-//         throw Error::Non_Nemeric_value();
-//     while (isdigit(line[i]))
-//     {
-//         buffer[j] = line[i];
-//         j++;
-//         i++;
-//         if(j == 9)
-//             throw Error::MaxUploads();
-//     }
-//     buffer[j] = '\0';
-//     Conf_File::Servers[server_index].max_body_size = strtol(buffer, NULL, 10);
-// }
 
 
 // void parse_file()

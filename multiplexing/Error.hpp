@@ -1,3 +1,4 @@
+#pragma once
 #include <exception>
 
 class Error
@@ -28,6 +29,11 @@ class Error
             public :
                 const char* what() const throw();
         };
+        class auto_Index : public std::exception
+        {
+            public :
+                const char* what() const throw();
+        };
         class Left_Brace : public std::exception
         {
             public:
@@ -39,6 +45,16 @@ class Error
                 const char* what() const throw();
         };
         class UnexpectedEndOfFile : public std::exception
+        {
+            public:
+                const char* what() const throw();
+        };
+        class Listen_port : public std::exception
+        {
+            public:
+                const char* what() const throw();
+        };
+        class SemiColon :public std::exception
         {
             public:
                 const char* what() const throw();
@@ -93,6 +109,12 @@ class Error
             public:
                 const char* what() const throw ();
         };
+
+        class Unkonwn_Directive_value : public std::exception
+        {
+            public :
+                const char* what() const throw();
+        };
         class MaxUploads : public std::exception
         {
             public:
@@ -103,7 +125,22 @@ class Error
             public:
                 const char* what() const throw();
         };
+        class Methods : public std::exception
+        {
+            public :
+                const char* what() const throw();
+        };
         class Max_port : public std::exception
+        {
+            public:
+                const char* what() const throw();
+        };
+        class CGI_Extension : public std::exception
+        {
+            public :
+                const char* what() const throw ();
+        };
+        class CGI_Path : public std::exception
         {
             public:
                 const char* what() const throw();
@@ -124,6 +161,11 @@ class Error
                 const char* what() const throw();
         };
         class Server_name : public std::exception
+        {
+            public:
+                const char* what() const throw();
+        };
+        class Error_page : public std::exception
         {
             public:
                 const char* what() const throw();

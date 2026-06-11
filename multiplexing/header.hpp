@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <sys/socket.h>
 // #include <netinit/in.h>
@@ -22,9 +23,26 @@
 #include <cstdlib>
 #include <sys/stat.h>
 #include <map>
+#include "Error.hpp"
 #define ERROR 1
 #define SUCESS 0
 
+typedef struct Location_Config
+{
+    std::string root;
+    std::string path;
+    std::string upload_path;
+    std::vector<std::string> index_files;
+    std::vector<std::string> allowed_methods;
+    std::string cgi_extension;
+    std::string cgi_path;
+    std::map<int, std::string> error_pages;
+    std::string _return;
+    std::string autoindex;
+    bool has_index;
+    bool has_root;
+    bool has_autoindex;
+} Location_Config;
 
 class Server_block
 {
@@ -42,7 +60,6 @@ class Server_block
         int listen_port;
         std::string host;
         std::string server_name;
-        // std::string error_page;
         std::string root;
         std::vector<std::string> index_files;
         size_t index_count;
@@ -52,8 +69,9 @@ class Server_block
         bool body_size_is_KB;
         bool body_size_is_BT;
         std::map<int, std::string> error_pages;
+        Location_Config location;
 
-        std::string location;
+        // std::string location;
         std::vector<std::string> methods;
         std::string default_file;
         std::string autoindex;
@@ -139,3 +157,9 @@ void expected_token(std::vector<std::string>& vector, size_t &i, std::string& ex
 std::string next_token(std::vector<std::string>& vector , size_t &i);
 void parse_config_file();
 bool isKnownDirective(const std::string& token);
+std::string next_token(std::vector<std::string>& tokens , size_t &i);
+void expected_token(std::vector<std::string>& tokens, size_t &i, std::string& expected);
+bool isKnownDirective(const std::string& token);
+bool max_uploads_is_unit(size_t size, size_t index);
+bool is_http_method(std::string& method);
+bool is_autoindex_id(std::string& id);
