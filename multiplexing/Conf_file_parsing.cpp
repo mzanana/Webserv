@@ -184,15 +184,41 @@ void parse_listen(size_t &index)
 void parse_error_pages(size_t &index)
 {
     size_t i = 0;
+    int code = 0;
     if (index + 2 >= Conf_File::tokens.size())
         throw Error::Error_page();
-    while (i < Conf_File::tokens.size() && !isdigit(Conf_File::tokens[index][0]))
+    char* endptr = NULL;
+    size_t tmp = index;
+    std::string buffer;
+    index++;
+    while (i < Conf_File::tokens.size() && Conf_File::tokens[tmp] != ";")
     {
-        Conf_File::Servers[server_index].error_pages[i] = next_token(Conf_File::tokens, index);
         i++;
+        tmp++;
     }
+    if (Conf_File::tokens[tmp] == ";")
+        buffer = Conf_File::tokens[tmp - 1];
+    i = 0;
+    // std::cout << "heres the first token after directive : " << Conf_File::tokens[index] << std::endl;
+    while (i < Conf_File::tokens.size() && isdigit(Conf_File::tokens[index][0]) && index < tmp)
+    {
+        code = strtol(Conf_File::tokens[index].c_str(), &endptr, 0);
+        if (code < 400 || code > 599)
+            throw std::runtime_error("Error\nError page code is out of range!. 400 < 'error code' < 599");
+        if (*endptr != '\0')
+            throw Error::Error_page();
+        Conf_File::Servers[server_index].error_pages[code] = buffer;
+        i++;
+        index++;
+    }
+    if (Conf_File::tokens[index][0] != '/')
+        throw Error::Error_page();
+    // else
+        // Conf_File::Servers[server_index].error_pages[]
+    // std::cout << "here is the recent error token : " << Conf_File::tokens[index] << std::endl;
     if (index >= Conf_File::tokens.size())
-        throw Error::UnexpectedEndOfFile();   
+        throw Error::UnexpectedEndOfFile();
+    index += 2;
 }
 
 void parse_directives(std::string& token, size_t &i)
@@ -277,7 +303,7 @@ void parse_methods(size_t &index)
     }
     if (index >= Conf_File::tokens.size())
         throw Error::UnexpectedEndOfFile();
-    index += 2;
+    index++;
 }
 
 void parse_cgi_extension(size_t &index)
@@ -385,10 +411,10 @@ void parse_config_file()
                     throw std::runtime_error("Error\nDirective '" + token + "' found outside 'server' block!.");
             }
         }
-        std::cout << token << std::endl;
-        std::cout << i << std::endl;
-        sleep (1);
+        usleep(110000);
         parse_directives(token, i);
+        std::cout << "reached\n";
+        std::cout << token << std::endl;
         // std::cout << i << std::endl;
     }
     if (depth != 0)

@@ -1,34 +1,37 @@
 #include <iostream>
-#include <chrono>
+#include <map>
+#include <string>
 
 int main() {
-    const long long ITERATIONS = 1000000000; // 1 Billion
-    volatile long long dummy = 0; // 'volatile' prevents the compiler from optimizing the loop away
+    // 1. Create a map: Key is int, Value is string
+    std::map<int, std::string> error_map;
 
-    // --- Benchmark FOR Loop ---
-    auto start_for = std::chrono::high_resolution_clock::now();
-    for (long long i = 0; i < ITERATIONS; ++i) {
-        dummy++;
+    // 2. Insert multiple DIFFERENT keys with the EXACT SAME value
+    error_map[400] = "/generic_error.html";
+    error_map[403] = "/generic_error.html";
+    error_map[404] = "/generic_error.html";
+    
+    // Insert a different key with a different value
+    error_map[500] = "/server_crash.html";
+
+    // 3. Print the map to prove how it stores them
+    std::cout << "Contents of the map (automatically sorted by key):" << std::endl;
+    
+    // C++98 iteration (no 'auto' allowed)
+    for (std::map<int, std::string>::const_iterator it = error_map.begin(); 
+         it != error_map.end(); 
+         ++it) {
+        std::cout << "Key: " << it->first 
+                  << "  ->  Value: " << it->second << std::endl;
     }
-    auto end_for = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> duration_for = end_for - start_for;
 
-
-    // --- Reset and Benchmark WHILE Loop ---
-    dummy = 0; 
-    auto start_while = std::chrono::high_resolution_clock::now();
-    long long j = 0;
-    while (j < ITERATIONS) {
-        dummy++;
-        ++j;
+    // 4. Prove that looking up a specific key works perfectly
+    std::cout << "\nLooking up key 403..." << std::endl;
+    std::map<int, std::string>::const_iterator search = error_map.find(403);
+    
+    if (search != error_map.end()) {
+        std::cout << "Found it! The path is: " << search->second << std::endl;
     }
-    auto end_while = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> duration_while = end_while - start_while;
-
-
-    // --- Output Results ---
-    std::cout << "For loop time:   " << duration_for.count() << " ms\n";
-    std::cout << "While loop time: " << duration_while.count() << " ms\n";
 
     return 0;
 }
