@@ -27,21 +27,8 @@
 #define ERROR 1
 #define SUCESS 0
 
-class AFd
-{
-    protected:
-        int fd;
-    public:
-        AFd();
-        virtual ~AFd();
-        int get_fd() const;
 
-};
-
-class Isocket : public AFd
-{
-    public:
-};
+// --------------------------------------- Config File Header Part ------------------------------------- //
 
 typedef struct Location_Config
 {
@@ -86,8 +73,6 @@ class Server_block
         bool body_size_is_BT;
         std::map<int, std::string> error_pages;
         Location_Config location;
-
-        // std::string location;
         std::vector<std::string> methods;
         std::string default_file;
         std::string autoindex;
@@ -119,9 +104,7 @@ class Conf_File
 {
     public:
         static std::vector<Server_block> Servers;
-        static std::vector<std::string> tokens;
-
-        
+        static std::vector<std::string> tokens;   
 };
 
 enum ClientState
@@ -153,8 +136,64 @@ struct Request
     std::map<std::string, std::string> headers;
 };
 
+class AFd
+{
+    protected:
+        int fd;
+    public:
+        AFd();
+        virtual ~AFd();
+        int get_fd() const;
+
+};
+
+// class ISocket
+// {
+//     public:
+//         virtual void setup(int port, std::string& host);
+//         virtual int AcceptClient() = 0;
+//         virtual ~ISocket();
+
+// };
+
+class Socket : public AFd
+{
+    private:
+        int         _port;
+        std::string _host;
+
+    public:
+        Socket();
+        ~Socket();
+        std::string GetClientIp();
+        void setup(int port, const std::string& host);
+        int  acceptClient();
+};
 
 
+
+
+// ---------------------------- Multiplexing Headers -------------------------------//
+
+
+class Multiplexer {
+private:
+    std::vector<Socket *>          _servers;
+    std::map<int, Client>        _clients;
+    std::vector<struct pollfd>     _pollfds;
+
+    void _acceptNewClient(Socket *server);
+    void _readClient(int fd);
+    void _writeClient(int fd);
+    void _removeClient(int fd);
+
+public:
+    Multiplexer();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+    ~Multiplexer();
+
+    void addServer(Socket *s);
+    void run();
+};
 
 // ----------------------------- Signals Functions --------------------------------//
 void handle_sigint(int sig);
@@ -179,3 +218,10 @@ bool isKnownDirective(const std::string& token);
 bool max_uploads_is_unit(size_t size, size_t index);
 bool is_http_method(std::string& method);
 bool is_autoindex_id(std::string& id);
+void parse_root_path(size_t &index);
+void parse_autoindex(size_t &index);
+void parse_upload_store(size_t &index);
+void parse_methods(size_t &index);
+void parse_cgi_extension(size_t &index);
+void parse_cgi_path(size_t &index);
+void parse_return(size_t &index);

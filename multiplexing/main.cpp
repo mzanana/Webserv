@@ -2,7 +2,6 @@
 #include "header.hpp"
 #include "Error.hpp"
 
-bool loop_is_true = true;
 int server_index = 0;
 
 
@@ -91,6 +90,10 @@ void open_file(std::string filename)
         throw Error::EmptyConfig();
 }
 
+
+
+
+
 int main(int ac , char **av)
 {
     signal(SIGINT, handle_sigint);
@@ -109,6 +112,15 @@ int main(int ac , char **av)
         validate_file();
         std::cout << "reached\n";
         parse_config_file();
+        // size_t i = 0;
+        // while(i < Conf_File::Servers.size())
+        // {
+            
+        // }
+        // while(loop_is_true)
+        // {
+
+        // }
         // std::cout << Conf_File::tokens.size() << std::endl;
         // size_t i = 0;
         // while (i < Conf_File::tokens.size())
@@ -129,6 +141,8 @@ int main(int ac , char **av)
         //     std::cout << Conf_File::rawLines[i] << std::endl;
         //     i++;
         // }
+        std::vector<struct Client> Client;
+        // setup_Clients();
         exit(1);
         int opt = 1;
         setsockopt(fd_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -142,7 +156,6 @@ int main(int ac , char **av)
         if (listen(fd_sock, 10) < 0)
             throw Error::Listen();
 
-        std::vector<struct Client> Client;
         std::vector<struct pollfd> fds;
         std::vector<struct pollfd> tmp_fds;
         struct pollfd listen_pfd = {fd_sock, POLLIN, 0};

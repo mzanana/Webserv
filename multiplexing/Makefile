@@ -10,7 +10,8 @@ SRCS = main.cpp \
 	   tools.cpp \
 	   Conf_file_parsing.cpp \
 	   validate_conf_file.cpp \
-	   classes_funcs.cpp \
+	   set_socket.cpp \
+	   location_parsing.cpp \
 
 HDRS = header.hpp Error.hpp
 
