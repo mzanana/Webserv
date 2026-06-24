@@ -70,9 +70,9 @@ void parse_host(size_t &index)
     }
     if (dot_count != 3)
         throw Error::Host_ip();
+    Conf_File::Servers[server_index].host = Conf_File::tokens[index + 1];
     index += 3;
     Conf_File::Servers[server_index].host_found = true;
-    // Conf_File::Servers[server_index].host = line.substr(start, end - start);
 }
 
 void parse_index(size_t &index)
@@ -135,22 +135,27 @@ void parse_server_name(size_t &index)
 void parse_max_body_size(size_t &index)
 {
     // size_t i = 0;
-    size_t size = Conf_File::tokens[index + 1].size() - 1;
+    size_t size = Conf_File::tokens[index + 1].size();
     if (index + 1 >= Conf_File::tokens.size() || index + 2 >= Conf_File::tokens.size())
         throw Error::MaxUploads();
     if (Conf_File::tokens[index + 2] != ";")
         throw Error::MaxUploads();
+    char *id = NULL;
     if (Conf_File::tokens[index + 2] == ";")
     {
-        Conf_File::Servers[server_index].max_body_size = strtol(next_token(Conf_File::tokens, index).substr(0, size - 1).c_str(), NULL, 10);
+        Conf_File::Servers[server_index].max_body_size = strtol(next_token(Conf_File::tokens, index).substr(0, size).c_str(), &id, 10);
         if (max_uploads_is_unit(size, index))
         {
-            if (Conf_File::tokens[index + 1][size - 1] == 'M')
+            if (*id == 'M')
                 Conf_File::Servers[server_index].body_size_is_MB = true;
-            if (Conf_File::tokens[index + 1][size - 1] == 'G')
+            if (*id == 'G')
                 Conf_File::Servers[server_index].body_size_is_GB = true;
-            if (Conf_File::tokens[index + 1][size - 1] == 'K')
+            if (*id == 'K')
                 Conf_File::Servers[server_index].body_size_is_KB = true;
+            else if (*id == '\0')
+                Conf_File::Servers[server_index].body_size_is_BT = true;
+            else 
+                throw Error::MaxUploads();
         }
     }
     index += 2;
@@ -299,6 +304,7 @@ void parse_config_file()
         }
         else if (token == "location")
         {
+            Conf_File::Servers[server_index].location_found = true;
             if (!in_server)
                 throw std::runtime_error("Error\n'location' directive cannot be nested outside 'server'!.");
             if (i + 2 >= Conf_File::tokens.size() || Conf_File::tokens[i + 2] != "{")
@@ -333,7 +339,7 @@ void parse_config_file()
                     throw std::runtime_error("Error\nDirective '" + token + "' found outside 'server' block!.");
             }
         }
-        usleep(110000);
+        // usleep(110000);
         parse_directives(token, i);
         // std::cout << "reached\n";
         // std::cout << token << std::endl;

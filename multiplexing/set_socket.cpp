@@ -2,23 +2,37 @@
 
 bool loop_is_true = true;
 
-// AFd::AFd() : fd(-1) {}
 
-// AFd::~AFd()
-// {
-//     if (fd != -1)
-//         close(fd);
-// }
 
 // int AFd::get_fd() const
 // {
 //     return fd;
 // }
 
-int AFd::get_fd()
+// ---------------------------------------- AFd Class ---------------------------------------- //
+
+AFd::AFd() : fd(-1) {}
+
+AFd::~AFd()
+{
+    if (fd != -1)
+        close(fd);
+}
+
+int AFd::get_fd() const
 {
     return fd;
 }
+
+// AFd::~AFd()
+// {
+//     close(fd);
+// }
+
+// ---------------------------------------- Socket Class ------------------------------------- //
+
+Socket::Socket() : _port(0)
+{}
 
 void Socket::setup(int port, const std::string& host)
 {
@@ -38,7 +52,7 @@ void Socket::setup(int port, const std::string& host)
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = inet_addr(host.c_str());
 
-    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
         throw Error::Bind();
     if (listen(fd, SOMAXCONN) == -1)
         throw Error::Listen();
@@ -49,6 +63,8 @@ int Socket::acceptClient()
     struct sockaddr_in client_addr = {};
     socklen_t len  = sizeof(client_addr);
     int client_fd = accept(fd, (struct sockaddr *)&client_addr, &len);
+    if (client_fd == -1)
+        throw Error::Accept();
     return client_fd;
 }
 
@@ -62,6 +78,12 @@ Socket::~Socket()
 //     return _host;
 // }
 
+
+// ------------------------------------------- Multiplexer Class ------------------------------ //
+
+
+Multiplexer::Multiplexer() {}
+
 void Multiplexer::addServer(Socket *s)
 {
     _servers.push_back(s);
@@ -69,6 +91,7 @@ void Multiplexer::addServer(Socket *s)
     addr.events = POLLIN;
     addr.fd = s->get_fd();
     addr.revents = 0;
+    _pollfds.push_back(addr);
 
 }
 
@@ -98,7 +121,7 @@ void Multiplexer::_acceptNewClient(Socket *s)
 
 void Multiplexer::run()
 {
-    while (loop_is_true)
+    while (loop_is_true)  
     {
         int poll_ret = poll(_pollfds.data(), _pollfds.size(), -1);
         if (poll_ret < 0)
@@ -145,6 +168,26 @@ void Multiplexer::run()
     }
 }
 
+void Multiplexer::extract_headers()
+{
+    // size_t
+}
+
+void Multiplexer::parse_request(int fd)
+{
+    
+}
+
+Multiplexer::~Multiplexer()
+{
+    size_t i = 0;
+    while (i < _servers.size())
+    {
+        delete _servers[i];
+        i++;
+    }
+}
+
 void Multiplexer::_readClient(int fd)
 {
     char buffer[4096];
@@ -163,14 +206,20 @@ void Multiplexer::_readClient(int fd)
         else
             iter->second.request.append(buffer, n);
     }
+    parse_request(fd);
+    std::cout << "client reading\n";
+    std::cout << "request from client " << fd << ":\n" << iter->second.request << std::endl;
+    enableWrite(fd);
 }
 
 void Multiplexer::_writeClient(int fd)
 {
-    char buffer[4096];
+    // char buffer[4096];
     std::map<int, Client>::iterator iter = _clients.find(fd);
     if (iter == _clients.end())
         return;
+    // parse_request();
+    iter->second.response = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
     int n = send(fd, iter->second.response.c_str(), iter->second.response.size(), MSG_NOSIGNAL);
     if (n <= -1)
     {
@@ -188,6 +237,20 @@ void Multiplexer::_writeClient(int fd)
                 break;
             }
         }
+    }
+}
+
+void Multiplexer::enableWrite(int fd)
+{
+    size_t i = 0;
+    while (i < _pollfds.size())
+    {
+        if (_pollfds[i].fd == fd)
+        {
+            _pollfds[i].events |= POLLOUT;
+            break;
+        }
+        i++;
     }
 }
 

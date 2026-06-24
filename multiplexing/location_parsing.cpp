@@ -48,11 +48,13 @@ void parse_methods(size_t &index)
     if (index + 2 >= Conf_File::tokens.size())
         throw Error::Methods();
     index++;
+    // std::cout << "reached\n";
+    // std::cout << next_token(Conf_File::tokens, index);
     while (i < Conf_File::tokens.size() && Conf_File::tokens[index] != ";")
     {
         if (!is_http_method(Conf_File::tokens[index]))
             throw Error::Unkonwn_Directive_value();
-        Conf_File::Servers[server_index].location.allowed_methods.push_back(next_token(Conf_File::tokens, index));
+        Conf_File::Servers[server_index].location.allowed_methods.push_back(Conf_File::tokens[index++]);
         i++;
     }
     if (index >= Conf_File::tokens.size())

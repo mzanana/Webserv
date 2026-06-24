@@ -66,7 +66,7 @@ class Server_block
         std::string root;
         std::vector<std::string> index_files;
         size_t index_count;
-        size_t max_body_size;
+        long max_body_size;
         bool body_size_is_GB;
         bool body_size_is_MB;
         bool body_size_is_KB;
@@ -116,16 +116,7 @@ enum ClientState
     CLOSING,
 };
 
-struct Client
-{
-    int fd;
-    size_t search_offset;
-    std::string request;
-    ClientState state;
-    size_t content_length;
-    size_t bytes_received;
-    std::string response;
-};
+
 
 struct Request
 {
@@ -136,6 +127,20 @@ struct Request
     std::map<std::string, std::string> headers;
 };
 
+struct Client
+{
+    int fd;
+    size_t search_offset;
+    std::string request;
+    ClientState state;
+    size_t content_length;
+    size_t bytes_received;
+    std::string response;
+    std::string body;
+    size_t end_of_header;
+    struct Request parsed_request;
+};
+
 class AFd
 {
     protected:
@@ -144,17 +149,8 @@ class AFd
         AFd();
         virtual ~AFd();
         int get_fd() const;
-
 };
 
-// class ISocket
-// {
-//     public:
-//         virtual void setup(int port, std::string& host);
-//         virtual int AcceptClient() = 0;
-//         virtual ~ISocket();
-
-// };
 
 class Socket : public AFd
 {
@@ -190,7 +186,9 @@ private:
 public:
     Multiplexer();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
     ~Multiplexer();
-
+    void parse_request(int fd);
+    void extract_headers();
+    void enableWrite(int fd);
     void addServer(Socket *s);
     void run();
 };
