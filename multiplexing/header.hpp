@@ -26,6 +26,9 @@
 #include "Error.hpp"
 #define ERROR 1
 #define SUCESS 0
+#define MAX_KB 20000
+#define MAX_MB 20
+#define MAX_BY 22000000
 
 
 // --------------------------------------- Config File Header Part ------------------------------------- //
@@ -67,7 +70,6 @@ class Server_block
         std::vector<std::string> index_files;
         size_t index_count;
         long max_body_size;
-        bool body_size_is_GB;
         bool body_size_is_MB;
         bool body_size_is_KB;
         bool body_size_is_BT;
@@ -124,6 +126,7 @@ struct Request
     std::string path;
     std::string version;
     std::string body;
+    std::string cgi;
     std::map<std::string, std::string> headers;
 };
 
@@ -163,11 +166,8 @@ class Socket : public AFd
         ~Socket();
         std::string GetClientIp();
         void setup(int port, const std::string& host);
-        int  acceptClient();
+        int  acceptClient();        
 };
-
-
-
 
 // ---------------------------- Multiplexing Headers -------------------------------//
 
@@ -186,11 +186,27 @@ private:
 public:
     Multiplexer();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
     ~Multiplexer();
-    void parse_request(int fd);
-    void extract_headers();
     void enableWrite(int fd);
     void addServer(Socket *s);
     void run();
+};
+
+class CGI
+{
+    private:
+        int stdin_pipe[2];
+        int stdout_pipe[2];
+        int client_fd;
+        pid_t pid;
+        std::string path;
+        std::string script;
+        std::string body;
+        std::vector<std::string> env_vars;
+    public:
+        CGI(const Client& client, const Location_Config& conf);
+        void writeToChild(int fd);
+        void readFromChild(int fd);
+        int execute();
 };
 
 // ----------------------------- Signals Functions --------------------------------//
@@ -201,6 +217,7 @@ void handle_sigstp(int sig);
 
 // ----------------------------- Parsing Functions --------------------------------//
 bool is_comment(std::string& line);
+std::vector<std::string> split(const std::string& str, const std::string& delimiter);
 void parse_file();
 void skip_white_spaces(std::string& line, size_t &i);
 void skip_directive(std::string& line, size_t &i);

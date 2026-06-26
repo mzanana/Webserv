@@ -32,7 +32,9 @@ int AFd::get_fd() const
 // ---------------------------------------- Socket Class ------------------------------------- //
 
 Socket::Socket() : _port(0)
-{}
+{
+    
+}
 
 void Socket::setup(int port, const std::string& host)
 {
@@ -168,15 +170,6 @@ void Multiplexer::run()
     }
 }
 
-void Multiplexer::extract_headers()
-{
-    // size_t
-}
-
-void Multiplexer::parse_request(int fd)
-{
-    
-}
 
 Multiplexer::~Multiplexer()
 {
@@ -206,11 +199,15 @@ void Multiplexer::_readClient(int fd)
         else
             iter->second.request.append(buffer, n);
     }
-    parse_request(fd);
-    std::cout << "client reading\n";
-    std::cout << "request from client " << fd << ":\n" << iter->second.request << std::endl;
+    // std::cout << "client reading\n";
+    // std::cout << "request from client " << fd << ":\n" << iter->second.request << std::endl;
     enableWrite(fd);
 }
+
+// std::string serve_index(int fd)
+// {
+//     std::string full_path = Conf
+// }
 
 void Multiplexer::_writeClient(int fd)
 {

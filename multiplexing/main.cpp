@@ -91,67 +91,72 @@ void open_file(std::string filename)
 }
 
 
-
 void Print()
 {
-    size_t i = 0;
-    // For readability, creating a reference to your specific server block
-    const Server_block& srv = Conf_File::Servers[i];
+    // size_t i = 0;
+        // std::cout << Conf_File::Servers[0].error_pages[500] << "\n";
+    // while (i < Conf_File::Servers[server_index].error_pages.size())
+    // {
+    //     std::cout << Conf_File::Servers[0].error_pages[i] << "\n";
+    //     usleep(1111111);
+    //     i++;
+    // }
+    // // For readability, creating a reference to your specific server block
+    // const Server_block& srv = Conf_File::Servers[i];
 
-    std::cout << "========== SERVER BLOCK [" << i << "] ==========" << std::endl;
+    // std::cout << "========== SERVER BLOCK [" << i << "] ==========" << std::endl;
 
-    // --- Printing Booleans (Using std::boolalpha to print 'true'/'false' instead of 1/0)
-    std::cout << std::boolalpha;
-    std::cout << "server_found:           " << srv.server_found << std::endl;
-    std::cout << "host_found:             " << srv.host_found << std::endl;
-    std::cout << "location_found:         " << srv.location_found << std::endl;
-    std::cout << "root_found:             " << srv.root_found << std::endl;
-    std::cout << "server_name_found:      " << srv.server_name_found << std::endl;
-    std::cout << "listen_found:           " << srv.listen_found << std::endl;
-    std::cout << "index_found:            " << srv.index_found << std::endl;
-    std::cout << "error_page_found:       " << srv.error_page_found << std::endl;
-    std::cout << "client_max_body_found:  " << srv.client_max_body_found << std::endl;
-    std::cout << "uploadLimits:           " << srv.uploadLimits << std::endl;
-    std::cout << "body_size_is_GB:        " << srv.body_size_is_GB << std::endl;
-    std::cout << "body_size_is_MB:        " << srv.body_size_is_MB << std::endl;
-    std::cout << "body_size_is_KB:        " << srv.body_size_is_KB << std::endl;
-    std::cout << "body_size_is_BT:        " << srv.body_size_is_BT << std::endl;
-    std::cout << std::noboolalpha; // Reset bool representation back to 1/0 if preferred
+    // // --- Printing Booleans (Using std::boolalpha to print 'true'/'false' instead of 1/0)
+    // std::cout << std::boolalpha;
+    // std::cout << "server_found:           " << srv.server_found << std::endl;
+    // std::cout << "host_found:             " << srv.host_found << std::endl;
+    // std::cout << "location_found:         " << srv.location_found << std::endl;
+    // std::cout << "root_found:             " << srv.root_found << std::endl;
+    // std::cout << "server_name_found:      " << srv.server_name_found << std::endl;
+    // std::cout << "listen_found:           " << srv.listen_found << std::endl;
+    // std::cout << "index_found:            " << srv.index_found << std::endl;
+    // std::cout << "error_page_found:       " << srv.error_page_found << std::endl;
+    // std::cout << "client_max_body_found:  " << srv.client_max_body_found << std::endl;
+    // std::cout << "uploadLimits:           " << srv.uploadLimits << std::endl;
+    // std::cout << "body_size_is_MB:        " << srv.body_size_is_MB << std::endl;
+    // std::cout << "body_size_is_KB:        " << srv.body_size_is_KB << std::endl;
+    // std::cout << "body_size_is_BT:        " << srv.body_size_is_BT << std::endl;
+    // std::cout << std::noboolalpha; // Reset bool representation back to 1/0 if preferred
 
-    // --- Printing Standard Primitives and Strings
-    std::cout << "listen_port:            " << srv.listen_port << std::endl;
-    std::cout << "host:                   \"" << srv.host << "\"" << std::endl;
-    std::cout << "server_name:            \"" << srv.server_name << "\"" << std::endl;
-    std::cout << "root:                   \"" << srv.root << "\"" << std::endl;
-    std::cout << "index_count:            " << srv.index_count << std::endl;
-    std::cout << "max_body_size:          " << srv.max_body_size << std::endl;
-    std::cout << "default_file:           \"" << srv.default_file << "\"" << std::endl;
-    std::cout << "autoindex:              \"" << srv.autoindex << "\"" << std::endl;
+    // // --- Printing Standard Primitives and Strings
+    // std::cout << "listen_port:            " << srv.listen_port << std::endl;
+    // std::cout << "host:                   \"" << srv.host << "\"" << std::endl;
+    // std::cout << "server_name:            \"" << srv.server_name << "\"" << std::endl;
+    // std::cout << "root:                   \"" << srv.root << "\"" << std::endl;
+    // std::cout << "index_count:            " << srv.index_count << std::endl;
+    // std::cout << "max_body_size:          " << srv.max_body_size << std::endl;
+    // std::cout << "default_file:           \"" << srv.default_file << "\"" << std::endl;
+    // std::cout << "autoindex:              \"" << srv.autoindex << "\"" << std::endl;
 
-    // --- Printing std::vector<std::string> index_files
-    std::cout << "index_files:            [ ";
-    for (std::vector<std::string>::const_iterator it = srv.index_files.begin(); it != srv.index_files.begin(); ++it) {
-        std::cout << *it << " ";
-    }
-    std::cout << "]" << std::endl;
+    // // --- Printing std::vector<std::string> index_files
+    // std::cout << "index_files:            [ ";
+    // for (std::vector<std::string>::const_iterator it = srv.index_files.begin(); it != srv.index_files.begin(); ++it) {
+    //     std::cout << *it << " ";
+    // }
+    // std::cout << "]" << std::endl;
 
-    // --- Printing std::vector<std::string> methods
-    std::cout << "methods:                [ ";
-    for (std::vector<std::string>::const_iterator it = srv.methods.begin(); it != srv.methods.end(); ++it) {
-        std::cout << *it << " ";
-    }
-    std::cout << "]" << std::endl;
+    // // --- Printing std::vector<std::string> methods
+    // std::cout << "methods:                [ ";
+    // for (std::vector<std::string>::const_iterator it = srv.methods.begin(); it != srv.methods.end(); ++it) {
+    //     std::cout << *it << " ";
+    // }
+    // std::cout << "]" << std::endl;
 
-    // --- Printing std::map<int, std::string> error_pages
-    std::cout << "error_pages:            {" << std::endl;
-    for (std::map<int, std::string>::const_iterator it = srv.error_pages.begin(); it != srv.error_pages.end(); ++it) {
-        std::cout << "  Code " << it->first << " -> \"" << it->second << "\"" << std::endl;
-    }
-    std::cout << "}" << std::endl;
+    // // --- Printing std::map<int, std::string> error_pages
+    // std::cout << "error_pages:            {" << std::endl;
+    // for (std::map<int, std::string>::const_iterator it = srv.error_pages.begin(); it != srv.error_pages.end(); ++it) {
+    //     std::cout << "  Code " << it->first << " -> \"" << it->second << "\"" << std::endl;
+    // }
+    // std::cout << "}" << std::endl;
 
-    // --- Location_Config block placeholder
-    std::cout << "location:               [Location_Config object loaded]" << std::endl;
-    std::cout << "==========================================" << std::endl;
+    // // --- Location_Config block placeholder
+    // std::cout << "location:               [Location_Config object loaded]" << std::endl;
+    // std::cout << "==========================================" << std::endl;
 }
 
 
@@ -171,6 +176,7 @@ int main(int ac , char **av)
         validate_file();
         parse_config_file();
         // Print();
+        // // Print();
         // exit(1);
         size_t i = 0;
         Multiplexer Mux;

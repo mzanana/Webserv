@@ -132,6 +132,7 @@ void parse_server_name(size_t &index)
 //     }
 // }
 
+
 void parse_max_body_size(size_t &index)
 {
     // size_t i = 0;
@@ -147,14 +148,26 @@ void parse_max_body_size(size_t &index)
         if (max_uploads_is_unit(size, index))
         {
             if (*id == 'M')
+            {
                 Conf_File::Servers[server_index].body_size_is_MB = true;
+                if (Conf_File::Servers[server_index].max_body_size > MAX_MB)
+                    throw Error::MaxUploads();
+            }
             if (*id == 'G')
-                Conf_File::Servers[server_index].body_size_is_GB = true;
+                throw Error::MaxUploads();
             if (*id == 'K')
+            {
+                if (Conf_File::Servers[server_index].max_body_size > MAX_KB)
+                    throw Error::MaxUploads();
                 Conf_File::Servers[server_index].body_size_is_KB = true;
-            else if (*id == '\0')
+            }
+            else if (id == NULL)
+            {
+                if (Conf_File::Servers[server_index].max_body_size > MAX_BY)
+                    throw Error::MaxUploads();
                 Conf_File::Servers[server_index].body_size_is_BT = true;
-            else 
+            }
+            else
                 throw Error::MaxUploads();
         }
     }
