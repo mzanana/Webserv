@@ -161,7 +161,7 @@ void Print()
 
 
 
-int main(int ac , char **av)
+int main(int ac , char **av, char **envp)
 {
     signal(SIGINT, handle_sigint);
     signal(SIGQUIT, handle_sigquit);
@@ -183,6 +183,7 @@ int main(int ac , char **av)
         while(i < Conf_File::Servers.size())
         {
             Socket *s = new Socket();
+            Mux.env = envp;
             s->setup(Conf_File::Servers[i].listen_port, Conf_File::Servers[i].host);
             Mux.addServer(s);
             i++;

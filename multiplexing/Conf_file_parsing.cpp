@@ -184,8 +184,8 @@ void parse_listen(size_t &index)
         throw Error::Listen_port();
     char* endptr;
     Conf_File::Servers[server_index].listen_port_str = Conf_File::tokens[index + 1];
-    std::cout << Conf_File::tokens[index + 1] << "\n";
-    exit(1);
+    // std::cout << Conf_File::tokens[index + 1] << "\n";
+    // exit(1);
     long port = strtol(next_token(Conf_File::tokens, index).c_str(), &endptr, 10);
     // std::cout << index << std::endl;
     // exit(1);

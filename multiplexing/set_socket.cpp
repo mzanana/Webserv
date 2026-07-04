@@ -135,7 +135,6 @@ std::string get_listen_value(std::string& host)
 
 int Multiplexer::handleClient(int fd)
 {
-    // Step 1: find matching server block
     size_t server_index = 0;
     for (size_t i = 0; i < Conf_File::Servers.size(); i++)
     {
@@ -146,39 +145,43 @@ int Multiplexer::handleClient(int fd)
         }
     }
 
-    // Step 2: find matching location block
     size_t location_index = 0;
     size_t longest_match = 0;
     for (size_t i = 0; i < Conf_File::Servers[server_index].location.size(); i++)
     {
         std::string loc_path = Conf_File::Servers[server_index].location[i].path;
-        if (_clients[fd].parsed_request.method_path.find(loc_path) == 0 && loc_path.size() > longest_match)
+        if (_clients[fd].parsed_request.request_path.find(loc_path) == 0 && loc_path.size() > longest_match)
         {
             longest_match = loc_path.size();
             location_index = i;
         }
     }
-
     Location_Config& loc = Conf_File::Servers[server_index].location[location_index];
-
-    // Step 3: check CGI extension
-    std::string req_path = _clients[fd].parsed_request.method_path;
+    std::string req_path = _clients[fd].parsed_request.request_path;
     size_t dot_pos = req_path.rfind('.');
     if (dot_pos == std::string::npos)
-        return 0; // no extension, not CGI
+        return 0;
 
     std::string extension = req_path.substr(dot_pos);
     for (size_t i = 0; i < loc.cgi_extensions.size(); i++)
     {
         if (loc.cgi_extensions[i] == extension)
         {
-            // Step 4: CGI match, create and execute
             CGI cgi(_clients[fd], loc);
-            cgi.execute();
-            return 1;
+            int pipe_fd = cgi.execute(_cgi_pids);
+            if (pipe_fd == -1)
+                return ERROR;
+            cgi.writeToChild();
+            _cgi_pipes[pipe_fd] = fd;
+            struct pollfd pfd;
+            pfd.fd = pipe_fd;
+            pfd.events = POLLIN;
+            pfd.revents = 0;
+            _pollfds.push_back(pfd);
+            return 0;
         }
     }
-    return 0; // not CGI, teammate handles static file
+    return 0;
 }
 
 void Multiplexer::run()
@@ -214,6 +217,28 @@ void Multiplexer::run()
                     }
                     if (is_server)
                         continue;
+                    if (_cgi_pipes.find(_pollfds[i].fd) != _cgi_pipes.end())
+                    {
+                        if (_pollfds[i].revents & POLLIN)
+                        {
+                            char buffer[4096];
+                            int n = read(_pollfds[i].fd, buffer, sizeof(buffer));
+                            if (n > 0)
+                                _clients[_cgi_pipes[_pollfds[i].fd]].response.append(buffer, n);
+                            if (n == 0 || n == -1)
+                            {
+                                int client_fd = _cgi_pipes[_pollfds[i].fd];
+                                enableWrite(client_fd);
+                                waitpid(_cgi_pids[_pollfds[i].fd], NULL, 0);
+                                close(_pollfds[i].fd);
+                                _cgi_pids.erase(_pollfds[i].fd);
+                                _pollfds.erase(_pollfds.begin() + i);
+                                _cgi_pipes.erase(_pollfds[i].fd);
+                                continue;
+                            }
+                        }
+                    }
+
                     if (_pollfds[i].revents & POLLIN)
                         _readClient(_pollfds[i].fd);
                     if (_pollfds[i].revents & POLLOUT)
@@ -241,28 +266,7 @@ Multiplexer::~Multiplexer()
     }
 }
 
-void Multiplexer::_readClient(int fd)
-{
-    char buffer[4096];
-    std::map<int, Client>::iterator iter = _clients.find(fd);
-    if (iter != _clients.end())
-    {
-        int n = recv(fd, buffer, sizeof(buffer), 0);
-        if (n == 0)
-        {
-            // iter->second.state = CLOSING;
-            std::cout << "Client Disconnected\n";
-            _removeClient(fd);
-        }
-        else if (n == -1)
-            _removeClient(fd);
-        else
-            iter->second.request.append(buffer, n);
-    }
-    std::cout << "client reading\n";
-    std::cout << "request from client " << fd << ":\n" << iter->second.request << std::endl;
-    enableWrite(fd);
-}
+
 
 // int Multiplexer::
 
@@ -329,4 +333,27 @@ void Multiplexer::_removeClient(int fd)
             break;
         }
     }
+}
+
+void Multiplexer::_readClient(int fd)
+{
+    char buffer[4096];
+    std::map<int, Client>::iterator iter = _clients.find(fd);
+    if (iter != _clients.end())
+    {
+        int n = recv(fd, buffer, sizeof(buffer), 0);
+        if (n == 0)
+        {
+            // iter->second.state = CLOSING;
+            std::cout << "Client Disconnected\n";
+            _removeClient(fd);
+        }
+        else if (n == -1)
+            _removeClient(fd);
+        else
+            iter->second.request.append(buffer, n);
+    }
+    // std::cout << "client reading\n";
+    // std::cout << "request from client " << fd << ":\n" << iter->second.request << std::endl;
+    enableWrite(fd);
 }

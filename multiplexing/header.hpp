@@ -8,6 +8,7 @@
 #include <poll.h>
 #include <sys/epoll.h>
 #include <cstring>
+#include <stdio.h>
 #include <unistd.h>
 #include <iostream>
 #include <sys/epoll.h>
@@ -22,6 +23,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <map>
 #include "Error.hpp"
 #define ERROR 1
@@ -122,12 +124,10 @@ enum ClientState
     CLOSING,
 };
 
-
-
 struct Request
 {
     std::string method;
-    std::string method_path;
+    std::string request_path;
     std::string cgi_extension;
     std::string version;
     std::string body;
@@ -159,7 +159,6 @@ class AFd
         int get_fd() const;
 };
 
-
 class Socket : public AFd
 {
     private:
@@ -176,12 +175,13 @@ class Socket : public AFd
 
 // ---------------------------- Multiplexing Class -------------------------------//
 
-
 class Multiplexer {
 private:
     std::vector<Socket *>          _servers;
     std::map<int, Client>        _clients;
     std::vector<struct pollfd>     _pollfds;
+    std::map<int , int>          _cgi_pipes;
+    std::map<int, pid_t>        _cgi_pids;
 
     void _acceptNewClient(Socket *server);
     void _readClient(int fd);
@@ -189,6 +189,7 @@ private:
     void _removeClient(int fd);
 
 public:
+    char** env;
     Multiplexer();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
     ~Multiplexer();
     void enableWrite(int fd);
@@ -197,30 +198,32 @@ public:
     void run();
 };
 
-
 // -------------------------------- CGI Class -----------------------------------//
-
 
 class CGI
 {
     private:
         int stdin_pipe[2];
         int stdout_pipe[2];
-        int client_fd;
+        // int client_fd;
         pid_t pid;
-        std::string path;
+        std::string request_path;
+        std::string interpreter;
         std::string script;
         std::string body;
+        bool extension_found;
+        char** request_vars;
         std::vector<std::string> env_vars;
+        int _find_interpreter(const Location_Config& conf);
         
     public:
-        CGI(const Client& client, const Location_Config& conf);
-        void writeToChild(int fd);
-        void readFromChild(int fd);
-        int execute();
+        CGI(Client& client, const Location_Config& conf);
+        ~CGI();
+        void build_env_vars(Client& client);
+        void writeToChild();
+        // void readFromChild(int fd);
+        int execute(std::map<int, pid_t>& map);
 };
-
-
 
 // ----------------------------- Signals Functions --------------------------------//
 void handle_sigint(int sig);
