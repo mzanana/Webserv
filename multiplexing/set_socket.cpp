@@ -238,6 +238,7 @@ void Multiplexer::run()
                             }
                         }
                     }
+                    std::cout << _pollfds[i].revents << "\n";
 
                     if (_pollfds[i].revents & POLLIN)
                         _readClient(_pollfds[i].fd);
@@ -344,7 +345,7 @@ void Multiplexer::_readClient(int fd)
         int n = recv(fd, buffer, sizeof(buffer), 0);
         if (n == 0)
         {
-            // iter->second.state = CLOSING;
+            iter->second.state = CLOSING;
             std::cout << "Client Disconnected\n";
             _removeClient(fd);
         }
