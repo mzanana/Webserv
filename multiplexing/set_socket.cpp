@@ -70,13 +70,14 @@ int Socket::acceptClient()
     return client_fd;
 }
 
+
 Socket::~Socket()
 {
     close(fd);
 }
 
 // std::string Socket::GetClientIp()
-// {
+// { 
 //     return _host;
 // }
 
@@ -354,6 +355,9 @@ void Multiplexer::_readClient(int fd)
         else
             iter->second.request.append(buffer, n);
     }
+    // _clients[fd].state = PROCESSING;
+    // if (_clients[fd].state = PROCESSING)
+    //     handleClient(fd);
     // std::cout << "client reading\n";
     // std::cout << "request from client " << fd << ":\n" << iter->second.request << std::endl;
     enableWrite(fd);
