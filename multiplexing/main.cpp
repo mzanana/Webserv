@@ -159,6 +159,19 @@ void Print()
     // std::cout << "==========================================" << std::endl;
 }
 
+// void print()
+// {
+//     std::cout << "server size is " << Conf_File::Servers.size() << "\n";
+//     size_t i = 0;
+//     while (i < Conf_File::Servers.size())
+//     {
+//         std::cout << Conf_File::Servers[i].listen_port << std::endl;
+//         std::cout << "server number : " << i << "' host" << Conf_File::Servers[i].host << " is " << std::endl;
+//         i++;
+
+//     }
+// }
+
 
 
 int main(int ac , char **av, char **envp)  
@@ -175,6 +188,8 @@ int main(int ac , char **av, char **envp)
         open_file(av[1]);
         validate_file();
         parse_config_file();
+        // print();
+        // exit(1);
         // Print();
         // // Print();
         // exit(1);

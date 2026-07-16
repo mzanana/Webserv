@@ -297,7 +297,7 @@ void parse_location_directives(std::string& token, size_t &i)
 void parse_config_file()
 {
     size_t i = 0;
-    size_t server_index = 0;
+    server_index = -1;
     bool in_server = false;
     int depth = 0;
     while (i < Conf_File::tokens.size())
@@ -305,10 +305,11 @@ void parse_config_file()
         std::string token = Conf_File::tokens[i];
         if (token == "server")
         {
+            server_index++;
             Server_block new_server;
             Conf_File::Servers.push_back(new_server);
-            Conf_File::Servers[server_index].location_count = 0;
-            server_index = (Conf_File::Servers.size() -1);
+            Conf_File::Servers[server_index].location_count = -1;
+            // server_index = (Conf_File::Servers.size() -1);
             // std::cout << "reached 2 \n";
             if (depth > 0)
                 throw std::runtime_error("Error\n'server' block cannot be nested inside another block!.");
@@ -321,6 +322,7 @@ void parse_config_file()
         }
         else if (token == "location")
         {
+            Conf_File::Servers[server_index].location_count++;
             Conf_File::Servers[server_index].location_found = true;
             Location_Config obj;
             Conf_File::Servers[server_index].location.push_back(obj);
@@ -340,7 +342,6 @@ void parse_config_file()
             }
             // depth++;
             i++;
-            Conf_File::Servers[server_index].location_count++; 
         }
         else if (token == "{")
             throw std::runtime_error("Error\nUnexpected '{'. only 'server' or 'location' can open a block!.");
@@ -363,6 +364,7 @@ void parse_config_file()
         }
         // usleep(110000);
         parse_directives(token, i);
+
         // std::cout << "reached\n";
         // std::cout << token << std::endl;
         // std::cout << i << std::endl;

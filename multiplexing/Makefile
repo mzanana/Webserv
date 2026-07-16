@@ -10,7 +10,7 @@ SRCS = main.cpp \
 	   tools.cpp \
 	   Conf_file_parsing.cpp \
 	   validate_conf_file.cpp \
-	   set_socket.cpp \
+	   Engine.cpp \
 	   location_parsing.cpp \
 	   CGI_class.cpp \
 
