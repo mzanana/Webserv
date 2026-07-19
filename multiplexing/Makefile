@@ -10,9 +10,10 @@ SRCS = main.cpp \
 	   tools.cpp \
 	   Conf_file_parsing.cpp \
 	   validate_conf_file.cpp \
+	   src/request/ClientRequest.cpp \
 	   Engine.cpp \
 	   location_parsing.cpp \
-	   CGI_class.cpp \
+	   CGI_class.cpp
 
 HDRS = header.hpp Error.hpp
 

@@ -32,6 +32,7 @@
 #define MAX_MB 20
 #define MAX_BY 22000000
 
+#include "include/request/ClientRequest.hpp"
 
 // --------------------------------------- Config File Header Part ------------------------------------- //
 
@@ -115,38 +116,18 @@ class Conf_File
         static std::vector<std::string> tokens;   
 };
 
-enum ClientState
-{
-    READING_HEADERS,
-    READING_BODY,
-    PROCESSING,
-    WRITING_RESPONSE,
-    CLOSING,
-};
-
-struct Request
-{
-    std::string method;
-    std::string request_path;
-    std::string cgi_extension;
-    std::string version;
-    std::string body;
-    std::string cgi;
-    std::map<std::string, std::string> headers;
-};
 
 struct Client
 {
     int fd;
     size_t search_offset;
     std::string request;
-    ClientState state;
     size_t content_length;
     size_t bytes_received;
     std::string response;
     std::string body;
     size_t end_of_header;
-    struct Request parsed_request;
+    ClientRequest parsed_request;
 };
 
 class AFd
