@@ -1,12 +1,20 @@
 #include "header.hpp"
 
+static std::string get_header_value(const std::map<std::string, std::string>& headers, const std::string& key)
+{
+    std::map<std::string, std::string>::const_iterator it = headers.find(key);
+    if (it == headers.end())
+        return "";
+    return it->second;
+}
+
 void CGI::build_env_vars(Client& client)
 {
 
-    env_vars.push_back("REQUEST_METHOD=" + client.parsed_request.method);
-    env_vars.push_back("PATH_INFO=" + client.parsed_request.request_path);
+    env_vars.push_back("REQUEST_METHOD=" + client.parsed_request.getMethod());
+    env_vars.push_back("PATH_INFO=" + client.parsed_request.getRequestPath());
     env_vars.push_back("SCRIPT_FILENAME=" + script);
-    env_vars.push_back("CONTENT_TYPE=" + client.parsed_request.headers["Content-Type"]);
+    env_vars.push_back("CONTENT_TYPE=" + get_header_value(client.parsed_request.getHeaders(), "content_type"));
     env_vars.push_back("QUERY_STRING=");
     char buff[32];
     sprintf(buff, "%zu", client.content_length);
@@ -19,7 +27,7 @@ void CGI::build_env_vars(Client& client)
     request_vars[env_vars.size()] = NULL;
 }
 
-CGI::CGI(Client& client, const Location_Config& conf) : request_path(client.parsed_request.request_path) ,body(client.parsed_request.body)
+CGI::CGI(Client& client, const Location_Config& conf) : request_path(client.parsed_request.getRequestPath()) ,body(client.parsed_request.getBody())
 {
     _find_interpreter(conf);
     build_env_vars(client);
