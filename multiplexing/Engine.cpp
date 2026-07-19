@@ -108,7 +108,7 @@ void Multiplexer::_acceptNewClient(Socket *s)
     Client client;
 
     client.fd = client_fd;
-    client.state = READING_HEADERS;
+    client.parsed_request.state = ClientRequest::START_LINE;
     client.search_offset = 0;
     client.bytes_received = 0;
     client.content_length = 0;
@@ -123,23 +123,29 @@ void Multiplexer::_acceptNewClient(Socket *s)
 }
 
 
-std::string get_listen_value(std::string& host)
+std::string get_listen_value(const std::string& host)
 {
     size_t pos = host.find(":");
     if (pos != std::string::npos)
         return host.substr(pos + 1);
     else
-        return NULL;
+        return "";
 }
 
-
+static std::string get_header_value(const std::map<std::string, std::string>& headers, const std::string& key)
+{
+    std::map<std::string, std::string>::const_iterator it = headers.find(key);
+    if (it == headers.end())
+        return "";
+    return it->second;
+}
 
 int Multiplexer::handleClient(int fd)
 {
     size_t server_index = 0;
     for (size_t i = 0; i < Conf_File::Servers.size(); i++)
     {
-        if (get_listen_value(_clients[fd].parsed_request.headers["Host"]) == Conf_File::Servers[i].listen_port_str)
+        if (get_listen_value(get_header_value(_clients[fd].parsed_request.getHeaders(), "host")) == Conf_File::Servers[i].listen_port_str)
         {
             server_index = i;
             break;
@@ -151,14 +157,14 @@ int Multiplexer::handleClient(int fd)
     for (size_t i = 0; i < Conf_File::Servers[server_index].location.size(); i++)
     {
         std::string loc_path = Conf_File::Servers[server_index].location[i].path;
-        if (_clients[fd].parsed_request.request_path.find(loc_path) == 0 && loc_path.size() > longest_match)
+        if (_clients[fd].parsed_request.getRequestPath().find(loc_path) == 0 && loc_path.size() > longest_match)
         {
             longest_match = loc_path.size();
             location_index = i;
         }
     }
     Location_Config& loc = Conf_File::Servers[server_index].location[location_index];
-    std::string req_path = _clients[fd].parsed_request.request_path;
+    std::string req_path = _clients[fd].parsed_request.getRequestPath();
     size_t dot_pos = req_path.rfind('.');
     if (dot_pos == std::string::npos)
         return 0;
@@ -308,7 +314,6 @@ void Multiplexer::_writeClient(int fd)
 void Multiplexer::enableWrite(int fd)
 {
     size_t i = 0;
-    _clients[fd].state = WRITING_RESPONSE;
     while (i < _pollfds.size())
     {
         if (_pollfds[i].fd == fd)
@@ -343,22 +348,20 @@ void Multiplexer::_readClient(int fd)
     std::map<int, Client>::iterator iter = _clients.find(fd);
     if (iter != _clients.end())
     {
-        int n = recv(fd, buffer, sizeof(buffer), 0);
-        if (n == 0)
+        int bytesRead = recv(fd, buffer, sizeof(buffer), 0);
+        if (bytesRead == 0)
         {
-            iter->second.state = CLOSING;
+            iter->second.parsed_request.state = ClientRequest::DONE;
             std::cout << "Client Disconnected\n";
             _removeClient(fd);
         }
-        else if (n == -1)
+        else if (bytesRead == -1)
             _removeClient(fd);
         else
-            iter->second.request.append(buffer, n);
+        {
+            iter->second.request.append(buffer, bytesRead);
+            iter->second.parsed_request.parse(iter->second, bytesRead);
+        }
     }
-    // _clients[fd].state = PROCESSING;
-    // if (_clients[fd].state = PROCESSING)
-    //     handleClient(fd);
-    // std::cout << "client reading\n";
-    // std::cout << "request from client " << fd << ":\n" << iter->second.request << std::endl;
     enableWrite(fd);
 }
