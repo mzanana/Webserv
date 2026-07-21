@@ -67,23 +67,33 @@ server
     error_page 500 /500.html;
 }
 ```
-## Client / Server Architecture
+### Client / Server Architecture
 + **Client :** on the HTTP is the browser, python or javascript app or any app that makes HTTP request.   
 + **Server :** HTTP Web Server, Apache, NodeJS, Python Tornado or NGINX.    
 
-## Request response cycle
-#### Request
-The request is what the client (browser) want from the server (webserver), and this is a valid example of an http request : 
+# Request response cycle
+## Request Structure 
+### Definition
+The request is what the client (browser) want from the server (webserver), the browser sends just a single formatted block of plain text.   
+
+### Anatomy of HTTP Request
   ```HTTP
-GET /orders/123 HTTP/1.1
-Host: 127.0.0.1:1337
-User-Agent: Manual-Http-Request
+POST /submit-form HTTP/1.1 \r\n
+Host: localhost:8080\r\n
+User-Agent: Mozilla/5.0\r\n
+Content-Length: 27\r\n
+\r\n
+username=admin&password=123
   ```
-  The request is divides by **three** sections:  
-  + Start line :  Contain the request method (Get, Post or delete), the URL which is the request target  (/orders/123) which is the specific webpage or resource requesting, and finaly the http version.   
-  + Headers :  From the second line until the empty line, defines key-value pairs that describe the message.   
-  + Empty line    
-  + Body :  Contain the data associated with the message.  might be POST data to send to the server in a request. 
+  
+  The request structure divides by **four** sections:  
+  + **The request line :**  The very first line on all the request coming. Containing three elements:
+    + Request method : GET, POST, DELETE, etc.  
+    + URI (Uniform Resource Identifiers), used to identify the resource on the web, (/orders/123);  
+    + HTTP version.   
+  + **Headers :**  From the second line until the empty line, defines key-value pairs separated by colon and space `: `,They describe the metadata of the request, like the `Host`, the client `User-Agent` or the `Content-Length` of the body, etc.      
+  + **Empty line**    
+  + **Body :**  Contain the data associated with the message, generally used on the `POST` method, usually `GET` or `DELETE` methods don't have body.  might be POST data to send to the server in a request. 
 
 #### Response
 The web server returns a HTTP based response. The response is divides by three sections also :  

@@ -3,8 +3,8 @@
 
 #include <map>
 #include <string>
-
-struct Client;
+#include "../../header.hpp"
+#include "RequestHelpers.hpp"
 
 class ClientRequest
 {
@@ -16,14 +16,17 @@ class ClientRequest
 	
 		enum ParseState
 		{
-			START_LINE,
 	    	HEADERS,
     		BODY,
 			DONE,
     		ERROR_STATE
 		};
 		
-		void parse(Client& client, size_t n);
+		ParseState state;
+		
+		void parse(Client& client);
+		void HeadersParser(std::string headers);
+		void RequestLineParser(std::string RequestLine);
 	
     	const std::string& getMethod() const;
     	const std::string& getRequestPath() const;
@@ -32,8 +35,9 @@ class ClientRequest
     	const std::string& getBody() const;
     	const std::string& getCgi() const;
     	const std::map<std::string, std::string>& getHeaders() const;
-    	ParseState getState() const;
-		ParseState state;
+		const short getStatusCode() const;
+
+		void setStatusCode(short StatusCode);
 		
 	private:
 		std::string method;
@@ -43,6 +47,7 @@ class ClientRequest
 		std::map<std::string, std::string> headers;
 		std::string cgi;
 		std::string body;
+		short status_code;
 };
 
 #endif
