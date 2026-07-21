@@ -108,7 +108,7 @@ void Multiplexer::_acceptNewClient(Socket *s)
     Client client;
 
     client.fd = client_fd;
-    client.parsed_request.state = ClientRequest::START_LINE;
+    client.parsed_request.state = ClientRequest::HEADERS;
     client.search_offset = 0;
     client.bytes_received = 0;
     client.content_length = 0;
@@ -185,7 +185,7 @@ int Multiplexer::handleClient(int fd)
             pfd.events = POLLIN;
             pfd.revents = 0;
             _pollfds.push_back(pfd);
-            return 0;
+            return 1;
         }
     }
     return 0;
@@ -360,7 +360,11 @@ void Multiplexer::_readClient(int fd)
         else
         {
             iter->second.request.append(buffer, bytesRead);
-            iter->second.parsed_request.parse(iter->second, bytesRead);
+            iter->second.parsed_request.parse(iter->second);
+            if (iter->second.parsed_request.state == ClientRequest::BODY)
+            {
+
+            }
         }
     }
     enableWrite(fd);
