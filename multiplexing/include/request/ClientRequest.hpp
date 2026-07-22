@@ -24,18 +24,20 @@ class ClientRequest
 		
 		ParseState state;
 		
-		void parse(Client& client);
-		void HeadersParser(std::string headers);
-		void RequestLineParser(std::string RequestLine);
-	
-    	const std::string& getMethod() const;
-    	const std::string& getRequestPath() const;
-    	const std::string& getCgiExtension() const;
-    	const std::string& getVersion() const;
-    	const std::string& getBody() const;
-    	const std::string& getCgi() const;
-    	const std::map<std::string, std::string>& getHeaders() const;
-		const short getStatusCode() const;
+		void		parse(Client& client);
+		void		HeadersParser(std::string headers);
+		void		RequestLineParser(std::string RequestLine);
+		bool		RequestLineValidate(void);
+		void	    CleanUri(void);
+    	
+		const std::string&							getMethod() const;
+    	const std::string&							getRequestPath() const;
+    	const std::string&							getCgiExtension() const;
+    	const std::string&							getVersion() const;
+    	const std::string&							getBody() const;
+    	const std::string&							getCgi() const;
+    	const std::map<std::string, std::string>&	getHeaders() const;
+		const short 								getStatusCode() const;
 
 		void setStatusCode(short StatusCode);
 		
